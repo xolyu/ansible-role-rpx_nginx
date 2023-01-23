@@ -1,0 +1,95 @@
+{{ ansible_managed | comment }}
+
+server {
+	listen          80;
+	listen          [::]:80;
+
+	server_name     {{ server_name }};
+
+	# general settings
+	client_max_body_size            16m;
+
+	# log files
+	access_log      {{ (nginx_logdir, domain, 'access.log') | path_join }};
+	error_log       {{ (nginx_logdir, domain, 'error.log') | path_join }};
+
+	include {{ (nginx_snippets_dir, 'redirect-301-https.conf') | path_join }};
+
+	include {{ (nginx_snippets_dir, 'letsencrypt.conf') | path_join }};
+
+	include {{ (nginx_snippets_dir, 'security-apache-ht.conf') | path_join }};
+	include {{ (nginx_snippets_dir, 'error-pages.conf') | path_join }};
+}
+
+server {
+	listen          443 ssl http2;
+	listen          [::]:443 ssl http2;
+
+	server_name     {{ server_name }};
+
+	# ssl cert RSA
+	ssl_certificate           {{ (rpx_cert_dir, domain, 'fullchain.cer') | path_join }};
+	ssl_certificate_key       {{ (rpx_cert_dir, domain, domain ~ '.key') | path_join }};
+
+	# ssl cert ECC
+	ssl_certificate           {{ (rpx_cert_dir, domain ~ '_ecc', 'fullchain.cer') | path_join }};
+	ssl_certificate_key       {{ (rpx_cert_dir, domain ~ '_ecc', domain ~ '.key') | path_join }};
+
+	include {{ (nginx_snippets_dir, 'ssl.conf') | path_join }};
+
+{% if _site.enable_hsts %}
+	# HSTS (ngx_http_headers_module is required) (63072000 seconds = 2 years)
+	add_header Strict-Transport-Security "{{ _site.hsts_header }}" always;
+{% endif %}
+
+{% if _site.enable_ocsp_stapling %}
+	# OCSP stapling
+	ssl_stapling on;
+	ssl_stapling_verify on;
+
+	# verify chain of trust of OCSP response using Root CA and Intermediate certs
+	{# # This should be ca.cer (certificate with the additional intermediate certificate)
+	   # See here: https://certbot.eff.org/docs/using.html#where-are-my-certificates       #}
+	ssl_trusted_certificate   {{ (rpx_cert_dir, domain ~ '_ecc', 'ca.cer') | path_join }};
+
+	# replace with the IP address of your resolver
+	resolver {{ _site.ocsp_stapling_resolver }};
+{% endif %}
+
+	# general settings
+	client_max_body_size            {{ _site.extra.client_max_body_size | default('128m', true) }};
+	proxy_buffering                 {{ _site.extra.proxy_buffering | default(false) | ternary('on', 'off') }};
+	proxy_read_timeout              {{ _site.extra.proxy_read_timeout | default('3h', true) }};
+
+	# extra settings
+{% if _site.extra | length %}
+{% set extra_done = ['client_max_body_size', 'proxy_buffering', 'proxy_read_timeout'] %}
+{% set extra_keys = _site.extra | reject('in', extra_done) %}
+{% for ekey in extra_keys %}
+	{{ ekey }}   {{ _site.extra[ekey] }};
+{% endfor %}
+{% endif %}
+{% if _site.extra_block | length %}
+	{{ _site.extra_block | indent("\t") }}
+{% endif %}
+
+	# log files
+	access_log      {{ (nginx_logdir, domain, 'access.log') | path_join }};
+	error_log       {{ (nginx_logdir, domain, 'error.log') | path_join }};
+
+	# Load configuration files for the default server block.
+	#include /etc/nginx/default.d/*.conf;
+
+{% if _site.proxy_pass is defined %}
+	location / {
+			proxy_pass      {{ _site.proxy_pass }};
+			include         /etc/nginx/proxy_params;
+{% if _site.access_log_for_proxy_pass == false %}
+			access_log      off;
+{% endif %}
+	}
+{% endif %}
+
+	include {{ (nginx_snippets_dir, 'security-apache-ht.conf') | path_join }};
+	include {{ (nginx_snippets_dir, 'error-pages.conf') | path_join }};
+}

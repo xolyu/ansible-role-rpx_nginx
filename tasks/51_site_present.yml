@@ -1,0 +1,60 @@
+---
+
+- name: Define _site.
+  set_fact:
+    _site:
+      domain: "{{ _rpx_site.domain }}"
+      additional_domains: "{{ _rpx_site.additional_domains | default([]) }}"
+      all_domains: "{{ ([_rpx_site.domain] + (_rpx_site.additional_domains | default([]))) | unique }}"
+      state: "{{ (_rpx_site.state | default('present') == 'absent') | ternary('absent', 'present') }}"
+      proxy_pass: "{{ _rpx_site.proxy_pass | default(omit) }}"
+      access_log_for_proxy_pass: "{{ _rpx_site.access_log_for_proxy_pass | default(false) }}"
+      enable_hsts: "{{ _rpx_site.enable_hsts | default(nginx_enable_hsts) }}"
+      hsts_header: "{{ _rpx_site.hsts_header | default(nginx_hsts_default_header) }}"
+      enable_ocsp_stapling: "{{ _rpx_site.enable_ocsp_stapling | default(nginx_enable_ocsp_stapling) }}"
+      ocsp_stapling_resolver: "{{ _rpx_site.ocsp_stapling_resolver | default(nginx_ocsp_stapling_resolver) }}"
+      extra: "{{ _rpx_site.extra | default([]) }}"
+      extra_block: "{{ _rpx_site.extra_block | default('') }}"
+      issue_cert: "{{ _rpx_site.issue_cert | default(true) }}"
+
+- name: Define _task_prefix.
+  set_fact:
+    _task_prefix: "{{ _site.domain }} :"
+
+- name: "{{ _task_prefix }} Create log dir for site."
+  file:
+    path: "{{ (nginx_logdir, _site.domain) | path_join }}"
+    state: directory
+    owner: nginx
+    group: adm
+    mode: 0640
+
+- name: "{{ _task_prefix }} Issue cert."
+  include_role:
+    name: "{{ _rpx_acmesh_role_name }}"
+  vars:
+    acmesh_certs:
+      - domains: "{{ _site.all_domains }}"
+        type: both
+        notify: "{{ rpx_change_notify }}"
+  when: _site.issue_cert
+
+- name: "{{ _task_prefix }} Template site.conf."
+  template:
+    src: site.conf.j2
+    dest: "{{ (nginx_sites_dir, domain ~ '.conf') | path_join }}"
+    owner: root
+    group: root
+    mode: 0644
+    # validate: nginx -t -c %s
+  vars:
+    server_name: "{{ _site.all_domains | join(' ') }}"
+    domain: "{{ _site.domain }}"
+  notify: "{{ rpx_change_notify }}"
+
+- name: "{{ _task_prefix }} Ensure disabled site conf is absent."
+  file:
+    path: "{{ (nginx_sites_dir, domain ~ '.disabled') | path_join }}"
+    state: absent
+  vars:
+    domain: "{{ _site.domain }}"

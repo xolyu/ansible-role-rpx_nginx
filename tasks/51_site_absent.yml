@@ -1,0 +1,31 @@
+---
+
+- name: Define _task_prefix.
+  set_fact:
+    _task_prefix: "{{ _rpx_site.domain }} :"
+
+- name: "{{ _task_prefix }} Remove site configuration file."
+  file:
+    path: "{{ item }}"
+    state: absent
+  vars:
+    domain: "{{ _rpx_site.domain }}"
+  with_items:
+    - "{{ (nginx_sites_dir, domain ~ '.conf') | path_join }}"
+    - "{{ (nginx_sites_dir, domain ~ '.disabled') | path_join }}"
+  notify: "{{ rpx_change_notify }}"
+
+- name: "{{ _task_prefix }} Disable cert."
+  include_role:
+    name: "{{ _rpx_acmesh_role_name }}"
+  vars:
+    acmesh_certs:
+      - domains: "{{ _rpx_site.domain }}"
+        state: disabled
+        type: both
+  when: _rpx_site.issue_cert | default(true)
+
+- name: "{{ _task_prefix }} Remove log dir."
+  file:
+    path: "{{ (nginx_logdir, _rpx_site.domain) | path_join }}"
+    state: absent

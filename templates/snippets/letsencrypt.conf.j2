@@ -1,0 +1,15 @@
+# for querying Let's Encrypt certificates (webroot mode)
+location /.well-known/acme-challenge/ {
+	root    {{ acmesh_challange_dir }}/;
+
+	types { }
+	default_type text/plain;
+
+	satisfy any;
+	auth_basic off;
+	allow all;
+
+	location ~ ^/\.well-known/acme-challenge.*/\. {
+		deny all;
+	}
+}

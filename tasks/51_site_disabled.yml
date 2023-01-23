@@ -1,0 +1,28 @@
+---
+
+- name: Define _task_prefix.
+  set_fact:
+    _task_prefix: "{{ _rpx_site.domain }} :"
+
+- name: "{{ _task_prefix }} Disable site configuration."
+  command:
+    chdir: "{{ nginx_sites_dir }}"
+    cmd: "mv {{ src }} {{ dest }}"
+  args:
+    removes: "{{ src }}"
+    creates: "{{ dest }}"
+  vars:
+    domain: "{{ _rpx_site.domain }}"
+    src: "{{ (nginx_sites_dir, domain ~ '.conf') | path_join }}"
+    dest: "{{ (nginx_sites_dir, domain ~ '.disabled') | path_join }}"
+  notify: "{{ rpx_change_notify }}"
+
+- name: "{{ _task_prefix }} Disable cert."
+  include_role:
+    name: "{{ _rpx_acmesh_role_name }}"
+  vars:
+    acmesh_certs:
+      - domains: "{{ _rpx_site.domain }}"
+        state: disabled
+        type: both
+  when: _rpx_site.issue_cert | default(true)

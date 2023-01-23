@@ -1,0 +1,19 @@
+---
+
+- name: Define rpx_default_site_content_path.
+  set_fact:
+    rpx_default_site_content_path: "{{ rpx_default_site_content_path ~ '/' }}"
+  when:
+    - rpx_default_site_function == 'static_content'
+    - rpx_default_site_content_path is defined
+    - rpx_default_site_content_path | regex_search('/$') is none
+
+- name: "Template default site."
+  template:
+    src: site-default.conf.j2
+    dest: "{{ (nginx_sites_dir, rpx_default_site_name ~ '.conf') | path_join }}"
+    owner: root
+    group: root
+    mode: 0644
+    # validate: nginx -t -c %s
+  notify: "{{ rpx_change_notify }}"

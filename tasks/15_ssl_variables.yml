@@ -1,0 +1,33 @@
+---
+
+- name: Request ec curves from OpenSSL.
+  command:
+    cmd: openssl ecparam -list_curves
+  register: _nginx_openssl_ec_curves
+  changed_when: false
+  ignore_errors: true
+
+- name: Extract OpenSSL curves as a list.
+  set_fact:
+    openssl_curves_list: >-
+      {{ _nginx_openssl_ec_curves.stdout
+      | regex_findall('^\s+([\w-]+)\s*:\s', multiline=True) }}
+
+- name: Select available curves from required curves.
+  set_fact:
+    nginx_ssl_ecdh_curve_available: >-
+      {{ req_curves_lower | map('extract', openssl_curves_dict) | select('string') }}
+  vars:
+    req_curves_lower: "{{ nginx_ssl_ecdh_curve | map('lower') }}"
+    openssl_curves_dict: >-
+      {{ dict( (openssl_curves_list | map('lower')) | zip(openssl_curves_list) ) }}
+
+- name: Define nginx_ssl_protocol_versions.
+  set_fact:
+    nginx_ssl_protocols_versions: "{{ versions }}"
+    nginx_ssl_protocols_version:
+      lt12: "{{ versions | select('version', '1.2', '<' ) | length > 0 | bool }}"
+      le12: "{{ versions | select('version', '1.2', '<=') | length > 0 | bool }}"
+      gt12: "{{ versions | select('version', '1.2', '>' ) | length > 0 | bool }}"
+  vars:
+    versions: "{{ nginx_ssl_protocols | map('lower') | map('extract', _nginx_ssl_protocols) }}"

@@ -1,0 +1,77 @@
+---
+
+- name: Include OS-family-specific variables.
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Include distribution and version-specific vars.
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+        - "{{ ansible_distribution }}.yml"
+      skip: true
+
+
+- name: Define nginx_repo.
+  set_fact:
+    nginx_repo: "{{ _nginx_repo_mainline }}"
+  when: nginx_repo is not defined
+
+- name: Define nginx_logdir.
+  set_fact:
+    nginx_logdir: "{{ _nginx_logdir }}"
+  when: nginx_logdir is not defined
+
+- name: Define nginx_dir.
+  set_fact:
+    nginx_dir: "{{ _nginx_dir }}"
+  when: nginx_dir is not defined
+
+- name: Define nginx_ssl_dir.
+  set_fact:
+    nginx_ssl_dir: "{{ (nginx_dir, nginx_ssl_dir) | path_join }}"
+  when: nginx_ssl_dir | regex_search('^/') is none
+
+- name: Define nginx_snippets_dir.
+  set_fact:
+    nginx_snippets_dir: "{{ (nginx_dir, nginx_snippets_dir) | path_join }}"
+  when: nginx_snippets_dir | regex_search('^/') is none
+
+- name: Define nginx_sites_dir.
+  set_fact:
+    nginx_sites_dir: "{{ (nginx_dir, nginx_sites_dir) | path_join }}"
+  when: nginx_sites_dir | regex_search('^/') is none
+
+- name: Define rpx_cert_dir.
+  set_fact:
+    rpx_cert_dir: "{{ acmesh_cert_dir | default(_acmesh_cert_dir, true) }}"
+  when: rpx_cert_dir is not defined
+
+- name: Define rpx_path_acme_challenge.
+  set_fact:
+    rpx_path_acme_challenge: "{{ acmesh_challange_dir | default(_acmesh_challange_dir, true) }}"
+  when: rpx_path_acme_challenge is not defined
+
+
+- name: Define rpx_error_pages.
+  set_fact:
+    rpx_error_pages: "{{ _rpx_error_pages }}"
+  when: rpx_error_pages is not defined
+
+- name: Define rpx_error_numbers.
+  set_fact:
+    rpx_error_numbers: "{{ rpx_error_pages | map(attribute='code') }}"
+  when: rpx_error_numbers is not defined
+
+- name: Define rpx_error_page_url.
+  set_fact:
+    rpx_error_page_url: "{{ rpx_error_page_url_dir ~ rpx_error_page_file }}"
+  when: rpx_error_page_url is not defined
+
+- name: Define rpx_error_page_urls.
+  set_fact:
+    rpx_error_page_urls: "{{ dict( rpx_error_numbers | zip(urllist) ) }}"
+  vars:
+    urlsplit: "{{ rpx_error_page_url | split(rpx_error_page_file_placeholder) }}"
+    urllist: "{{ [urlsplit[0]] | product(rpx_error_numbers) | product([ urlsplit[1] | default('') ]) | map('flatten') | map('join') }}"
+  when: rpx_error_page_urls is not defined

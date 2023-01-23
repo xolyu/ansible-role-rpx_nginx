@@ -1,0 +1,15 @@
+---
+
+- name: Create error pages directory.
+  file:
+    path: "{{ rpx_path_error_pages }}"
+    state: directory
+
+- name: Create error pages.
+  template:
+    src: error_page.dark.htm.j2
+    dest: "{{ (rpx_path_error_pages, rpx_error_page_file |
+      regex_replace(placeholder, item.code | string)) | path_join }}"
+  with_items: "{{ rpx_error_pages }}"
+  vars:
+    placeholder: "{{ rpx_error_page_file_placeholder | regex_escape() }}"

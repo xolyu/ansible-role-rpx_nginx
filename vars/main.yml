@@ -1,0 +1,55 @@
+---
+# vars file for rpx_nginx
+
+rpx_change_notify:
+  - reload nginx
+
+_rpx_acmesh_role_name: xolyu.acmesh
+_acmesh_challange_dir: /var/www/acme-challange
+_acmesh_cert_dir: /etc/acme-certs
+
+_nginx_ssl_protocols:
+  'sslv2': '0.2'
+  'sslv3': '0.3'
+  'tlsv1': '1.0'
+  'tlsv1.1': '1.1'
+  'tlsv1.2': '1.2'
+  'tlsv1.3': '1.3'
+
+_rpx_error_pages:
+  - code: 400
+    title: Bad Request
+    message: "The server cannot process the request due to something that is perceived to be a client error."
+  - code: 401
+    title: Unauthorized
+    message: "The requested resource requires an authentication."
+  - code: 403
+    title: Access Denied
+    message: "The requested resource requires an authentication."
+  - code: 404
+    title: Resource not found
+    message: "The requested resource could not be found but may be available again in the future."
+
+  - code: 500
+    title: Webservice currently unavailable
+    message: "An unexpected condition was encountered."
+  - code: 501
+    title: Not Implemented
+    message: "The Webserver cannot recognize the request method."
+  - code: 502
+    title: Webservice currently unavailable
+    message: "We've got some trouble with our backend upstream cluster."
+  - code: 503
+    title: Webservice currently unavailable
+    message: "We've got some trouble with our backend upstream cluster."
+  - code: 520
+    title: Origin Error - Unknown Host
+    message: "The requested hostname is not routed. Use only hostnames to access resources."
+  - code: 521
+    title: Webservice currently unavailable
+    message: "We've got some trouble with our backend upstream cluster."
+  - code: 533
+    title: Scheduled Maintenance
+    message: "This site is currently down for maintenance."
+
+_rpx_dhparam_url_mozilla: https://ssl-config.mozilla.org/ffdhe2048.txt

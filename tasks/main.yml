@@ -1,0 +1,22 @@
+---
+# tasks file for rpx_nginx
+
+- include_tasks: 01_variables.yml
+- include_tasks: "10_setup-{{ ansible_os_family }}.yml"
+  when: rpx_role_execution != 'only_sites'
+- include_tasks: 15_ssl_variables.yml
+
+- block:
+    - include_tasks: 20_configure.yml
+    - include_tasks: 23_default_site.yml
+    - include_tasks: 27_error_pages.yml
+  when: rpx_role_execution != 'only_sites'
+
+- name: Ensure nginx is started and enabled.
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- include_tasks: 50_sites.yml
+  when: rpx_role_execution != 'without_sites'

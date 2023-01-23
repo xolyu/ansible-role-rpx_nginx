@@ -1,0 +1,8 @@
+---
+
+- name: Configure sites.
+  include_tasks: "51_site_{{ _rpx_site.state | default('present') }}.yml"
+  loop: "{{ rpx_sites }}"
+  loop_control:
+    loop_var: _rpx_site
+    label: "{{ _rpx_site.domain }}"

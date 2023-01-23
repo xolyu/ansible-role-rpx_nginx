@@ -1,0 +1,5 @@
+# redirect the virtual ErrorPages path the real path
+location {{ rpx_error_page_url_dir }} {
+	alias	{{ rpx_path_error_pages }};
+	internal;
+}

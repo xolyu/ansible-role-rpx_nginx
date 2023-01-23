@@ -1,0 +1,12 @@
+---
+# handlers file for rpx_nginx
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted

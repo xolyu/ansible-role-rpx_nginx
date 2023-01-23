@@ -1,0 +1,4 @@
+# prevent serving Apaches .htaccess/.htpasswd
+location ~ /\.ht {
+	deny all;
+}

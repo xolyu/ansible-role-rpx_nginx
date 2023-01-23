@@ -1,0 +1,25 @@
+---
+
+- name: Download nginx GnuPG key.
+  get_url:
+    url: "{{ _nginx_gpgkey_url }}"
+    dest: "{{ _nginx_gpgkey_path }}"
+
+- name: Add nginx repository.
+  apt_repository:
+    repo: "deb [signed-by={{ _nginx_gpgkey_path }}] {{ nginx_repo }} {{ ansible_distribution_release }} nginx"
+    filename: nginx
+
+- name: Pin nginx.org packages over distribution-provided ones.
+  copy:
+    content: |
+      Package: *
+      Pin: origin nginx.org
+      Pin: release o=nginx
+      Pin-Priority: 900
+    dest: /etc/apt/preferences.d/99nginx
+
+- name: Install nginx.
+  apt:
+    name: nginx
+  notify: restart nginx

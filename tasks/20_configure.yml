@@ -1,0 +1,87 @@
+---
+
+- name: Ensure directories are present.
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - "{{ nginx_ssl_dir }}"
+    - "{{ nginx_snippets_dir }}"
+    - "{{ nginx_sites_dir }}"
+
+- name: Link snakeoil cert in ssl directory.
+  file:
+    path: "{{ (nginx_ssl_dir, item.file) | path_join }}"
+    src: "{{ item.src }}"
+    state: link
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - file: ssl-cert-snakeoil.pem
+      src: /etc/ssl/certs/ssl-cert-snakeoil.pem
+    - file: ssl-cert-snakeoil.key
+      src: /etc/ssl/private/ssl-cert-snakeoil.key
+
+- name: Template proxy_params.
+  template:
+    src: proxy_params.j2
+    dest: "{{ (nginx_dir, 'proxy_params') | path_join }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload nginx
+
+- name: Template all snippets.
+  template:
+    src: "{{ item }}"
+    dest: "{{ (nginx_snippets_dir, ( item | basename | regex_replace('\\.j2$') )) | path_join }}"
+    owner: root
+    group: root
+    mode: 0644
+  with_fileglob:
+    - ../templates/snippets/*.j2
+  notify: reload nginx
+
+- name: Template nginx.conf.
+  template:
+    src: nginx.conf.j2
+    dest: "{{ (nginx_dir, 'nginx.conf') | path_join }}"
+    owner: root
+    group: root
+    mode: 0644
+    validate: nginx -t -c %s
+    backup: yes
+  notify: reload nginx
+
+- name: Generate dhparam with OpenSSL.
+  command:
+    cmd: "openssl dhparam -out {{ dhparam_file }} {{ dhparam_numbits }}"
+    creates: "{{ dhparam_file }}"
+  vars:
+    dhparam_file: "{{ (nginx_ssl_dir, 'dhparam.pem') | path_join }}"
+    dhparam_numbits: "{{ rpx_dhparam_numbits }}"
+  when:
+    - nginx_ssl_protocols_version.le12
+    - rpx_dhparam_source == 'generate_by_openssl'
+  notify: reload nginx
+
+- name: Download dhparam from Mozilla.
+  get_url:
+    url: "{{ _rpx_dhparam_url_mozilla }}"
+    dest: "{{ dhparam_file }}"
+  vars:
+    dhparam_file: "{{ (nginx_ssl_dir, 'dhparam.pem') | path_join }}"
+  when:
+    - nginx_ssl_protocols_version.le12
+    - rpx_dhparam_source == 'download_from_mozilla'
+  notify: reload nginx
+
+- name: Create ACME challange dir.
+  file:
+    path: "{{ acmesh_challange_dir }}"
+    state: directory
+    owner: "{{ acmesh_user | default(omit) }}"

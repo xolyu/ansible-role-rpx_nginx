@@ -1,0 +1,22 @@
+{% if nginx_ssl_protocols_version.le12 %}
+ssl_dhparam             {{ (nginx_ssl_dir, 'dhparam.pem') | path_join }};
+{% endif %}
+ssl_protocols           {{ nginx_ssl_protocols | join(' ') }};
+{% if nginx_ssl_ecdh_curve_available is defined and nginx_ssl_ecdh_curve_available | length %}
+ssl_ecdh_curve          {{ nginx_ssl_ecdh_curve_available | join(':') }};
+{% endif %}
+
+ssl_session_cache       shared:SSL:{{ nginx_ssl_session_cache_size }};
+ssl_session_timeout     {{ nginx_ssl_session_timeout }};
+ssl_session_tickets     off;
+
+{% if nginx_ssl_ciphers is defined and nginx_ssl_ciphers | length %}
+{# nginx_ssl_ciphers is string #}
+{% if nginx_ssl_ciphers is string %}
+ssl_ciphers             {{ nginx_ssl_ciphers | regex_replace(' ') }};
+{# nginx_ssl_ciphers is list #}
+{% elif nginx_ssl_ciphers is not string and nginx_ssl_ciphers is not mapping and nginx_ssl_ciphers is iterable %}
+ssl_ciphers             {{ nginx_ssl_ciphers | join(':') }};
+{% endif %}
+{% endif %}
+ssl_prefer_server_ciphers       {{ nginx_ssl_protocols_version.lt12 | ternary('on', 'off') }};
