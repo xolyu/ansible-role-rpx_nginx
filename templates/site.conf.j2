@@ -57,10 +57,10 @@ server {
 {% endif %}
 
 	# general settings
-	client_max_body_size            {{ _site.extra.client_max_body_size | default('128m', true) }};
-	proxy_buffering                 {{ _site.extra.proxy_buffering | default(false) | ternary('on', 'off') }};
-	proxy_request_buffering         {{ _site.extra.proxy_request_buffering | default(false) | ternary('on', 'off') }};
-	proxy_read_timeout              {{ _site.extra.proxy_read_timeout | default('2m', true) }};
+	client_max_body_size            {{ _site.extra.client_max_body_size | default(rpx_default_client_max_body_size, true) }};
+	proxy_buffering                 {{ _site.extra.proxy_buffering | default(rpx_default_proxy_buffering) | ternary('on', 'off') }};
+	proxy_request_buffering         {{ _site.extra.proxy_request_buffering | default(rpx_default_proxy_request_buffering) | ternary('on', 'off') }};
+	proxy_read_timeout              {{ _site.extra.proxy_read_timeout | default(rpx_default_proxy_read_timeout, true) }};
 
 	# extra settings
 {% if _site.extra | length %}

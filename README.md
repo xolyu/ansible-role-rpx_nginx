@@ -173,6 +173,23 @@ None.
   Default: *undefined*
 
 
+### Defaults for Sites
+
+* **`rpx_default_client_max_body_size`**  
+  Defines the site's default for the maximum allowed size of the client request body. See [client_max_body_size in nginx docs](http://nginx.org/en/docs/http/ngx_http_core_module.html#client_max_body_size).  
+  Default: `128m`
+* **`rpx_default_proxy_buffering`**  
+  Defines the default state for sites of response buffering from the proxied server. See [proxy_buffering in nginx docs](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering).  
+  Default: `off`
+* **`rpx_default_proxy_request_buffering`**  
+  Defines the default state for sites buffering of a client request body. See [proxy_request_buffering in nginx docs](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_request_buffering).  
+  Default: `off`
+* **`rpx_default_proxy_read_timeout`**  
+  Defines the site's default timeout for reading a response from the proxied server. See [proxy_read_timeout in nginx docs](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout).  
+  Default: `2m`
+
+
+
 ### Sites of the reverse proxy
 
 Sites are defined with **`rpx_sites`** as an List of Dicts.  
