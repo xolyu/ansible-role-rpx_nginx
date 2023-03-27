@@ -188,6 +188,9 @@ None.
   Defines the site's default timeout for reading a response from the proxied server. See [proxy_read_timeout in nginx docs](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_read_timeout).  
   Default: `2m`
 
+> [Nginx's measurement units](http://nginx.org/en/docs/syntax.html) for  
+> &rarr; times: `ms`, `s`, `m`, `h`  
+> &rarr; data: `k`/`K`, `m`/`M`, `g`/`G`.
 
 
 ### Sites of the reverse proxy
