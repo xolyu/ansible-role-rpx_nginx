@@ -59,11 +59,12 @@ server {
 	# general settings
 	client_max_body_size            {{ _site.extra.client_max_body_size | default('128m', true) }};
 	proxy_buffering                 {{ _site.extra.proxy_buffering | default(false) | ternary('on', 'off') }};
-	proxy_read_timeout              {{ _site.extra.proxy_read_timeout | default('3h', true) }};
+	proxy_request_buffering         {{ _site.extra.proxy_request_buffering | default(false) | ternary('on', 'off') }};
+	proxy_read_timeout              {{ _site.extra.proxy_read_timeout | default('2m', true) }};
 
 	# extra settings
 {% if _site.extra | length %}
-{% set extra_done = ['client_max_body_size', 'proxy_buffering', 'proxy_read_timeout'] %}
+{% set extra_done = ['client_max_body_size', 'proxy_buffering', 'proxy_request_buffering', 'proxy_read_timeout'] %}
 {% set extra_keys = _site.extra | reject('in', extra_done) %}
 {% for ekey in extra_keys %}
 	{{ ekey }}   {{ _site.extra[ekey] }};

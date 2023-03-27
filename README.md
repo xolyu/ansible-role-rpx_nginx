@@ -233,6 +233,7 @@ Dict configuration of a single site
   extra:
     client_max_body_size: 128m
     proxy_buffering: off
+    proxy_request_buffering: off
     proxy_read_timeout: 3h
   ```
 
