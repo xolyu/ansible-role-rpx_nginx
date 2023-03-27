@@ -176,6 +176,7 @@ None.
 ### Sites of the reverse proxy
 
 Sites are defined with **`rpx_sites`** as an List of Dicts.  
+Default: `[]`  
 Only sites that are defined are handled, i.e. sites that are not defined remain untouched, in particular they are not automatically deleted.
 
 Dict configuration of a single site
