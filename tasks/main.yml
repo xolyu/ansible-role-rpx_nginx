@@ -6,6 +6,16 @@
   when: rpx_role_execution != 'only_sites'
 - include_tasks: 15_ssl_variables.yml
 
+- name: Get nginx version.
+  command:
+    cmd: nginx -v
+  register: _result_nginx_version
+  changed_when: false
+
+- name: Define _nginx_version.
+  set_fact:
+    _nginx_version: "{{ _result_nginx_version.stderr | regex_search('[0-9\\.]+') }}"
+
 - block:
     - include_tasks: 20_configure.yml
     - include_tasks: 23_default_site.yml

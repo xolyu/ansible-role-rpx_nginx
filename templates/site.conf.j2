@@ -22,8 +22,14 @@ server {
 }
 
 server {
+{% if _nginx_version is version('1.25.1', '<') %}
 	listen          443 ssl http2;
 	listen          [::]:443 ssl http2;
+{% else %}
+	listen          443 ssl;
+	listen          [::]:443 ssl;
+	http2           on;
+{% endif %}
 
 	server_name     {{ server_name }};
 
