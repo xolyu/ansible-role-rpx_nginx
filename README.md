@@ -103,7 +103,7 @@ None.
 
 * **`nginx_enable_ocsp_stapling`**  
   Type: Boolean  
-  Default: `yes`
+  Default: `no` _(Disabled since v0.11.0, as [Let's Encrypt has discontinued OCSP support](https://letsencrypt.org/2024/12/05/ending-ocsp).)_
 
 * **`nginx_ocsp_stapling_resolver`**  
   Default: `9.9.9.9`

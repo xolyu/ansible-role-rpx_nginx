@@ -41,7 +41,7 @@ rpx_dhparam_numbits: 4096
 nginx_enable_hsts: yes
 nginx_hsts_default_header: "max-age=63072000"  # (63072000 seconds = 2 years)
 # nginx_hsts_default_header: "max-age=63072000; includeSubDomains"
-nginx_enable_ocsp_stapling: yes
+nginx_enable_ocsp_stapling: no
 nginx_ocsp_stapling_resolver: "9.9.9.9"
 
 rpx_error_page_file: "HTTP##errno##.html"
