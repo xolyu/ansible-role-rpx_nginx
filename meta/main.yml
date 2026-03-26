@@ -27,6 +27,7 @@ galaxy_info:
         - bionic
         - focal
         - jammy
+        - noble
 
   galaxy_tags: []
   #   - reverse_proxy
