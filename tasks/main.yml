@@ -2,7 +2,7 @@
 # tasks file for rpx_nginx
 
 - include_tasks: 01_variables.yml
-- include_tasks: "10_setup-{{ ansible_os_family }}.yml"
+- include_tasks: "10_setup-{{ ansible_facts.os_family }}.yml"
   when: rpx_role_execution != 'only_sites'
 - include_tasks: 15_ssl_variables.yml
 

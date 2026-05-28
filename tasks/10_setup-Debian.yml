@@ -7,7 +7,7 @@
 
 - name: Add nginx repository.
   apt_repository:
-    repo: "deb [signed-by={{ _nginx_gpgkey_path }}] {{ nginx_repo }} {{ ansible_distribution_release }} nginx"
+    repo: "deb [signed-by={{ _nginx_gpgkey_path }}] {{ nginx_repo }} {{ ansible_facts.distribution_release }} nginx"
     filename: nginx
 
 - name: Pin nginx.org packages over distribution-provided ones.
