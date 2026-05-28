@@ -11,6 +11,7 @@ rpx_role_execution: normal  # normal, only_sites, without_sites
 nginx_ssl_dir: ssl
 nginx_snippets_dir: snippets
 nginx_sites_dir: sites.d
+nginx_basic_auth_dir: auth_basic_user_files
 # rpx_cert_dir: /etc/acme-certs
 # rpx_path_acme_challenge: /var/www/acme-challenge
 
@@ -96,3 +97,10 @@ rpx_sites: []
 #       #content block
 
 #     issue_cert: yes
+
+#     basic_auth: |
+#       user1:$apr1$exampleforhash
+#       user2:$apr1$exampleforhash
+#     basic_auth:
+#       - user2:$apr1$exampleforhash
+#       - user3:$apr1$exampleforhash

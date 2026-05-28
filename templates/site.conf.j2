@@ -93,6 +93,12 @@ server {
 	# Load configuration files for the default server block.
 	#include /etc/nginx/default.d/*.conf;
 
+{% if _site.basic_auth is iterable and _site.basic_auth | length > 0 %}
+	# basic auth
+	auth_basic              "Auth required";
+	auth_basic_user_file    {{ (nginx_basic_auth_dir, domain ~ '.htpasswd') | path_join }};
+{% endif %}
+
 {% if _site.proxy_pass is defined %}
 	location / {
 		proxy_pass      {{ _site.proxy_pass }};

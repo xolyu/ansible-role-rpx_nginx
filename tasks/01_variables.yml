@@ -47,6 +47,11 @@
     nginx_sites_dir: "{{ (nginx_dir, nginx_sites_dir) | path_join }}"
   when: nginx_sites_dir | regex_search('^/') is none
 
+- name: Define nginx_basic_auth_dir.
+  set_fact:
+    nginx_basic_auth_dir: "{{ (nginx_dir, nginx_basic_auth_dir) | path_join }}"
+  when: nginx_basic_auth_dir | regex_search('^/') is none
+
 - name: Define rpx_cert_dir.
   set_fact:
     rpx_cert_dir: "{{ acmesh_cert_dir | default(_acmesh_cert_dir, true) }}"

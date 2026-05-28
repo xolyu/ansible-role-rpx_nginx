@@ -270,6 +270,23 @@ Dict configuration of a single site
   Type: Boolean  
   Default: `yes`
 
+* **`basic_auth`**  
+  User(s) for basic_auth.  
+  Type: String/Block, List, Dict  
+  Default: *undefined*  
+  Example for String:
+  ```yml
+  basic_auth: |
+    user1:$apr1$hashforuser1
+    user2:$apr1$hashforuser2
+  ```
+  Example for List:
+  ```yml
+  basic_auth:
+    - user1:$apr1$hashforuser1
+    - user2:$apr1$hashforuser2
+  ```
+
 Minimal `rpx_sites` configuration:
 ```yml
 rpx_sites:

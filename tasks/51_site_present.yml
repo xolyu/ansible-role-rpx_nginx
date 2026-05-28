@@ -16,6 +16,7 @@
       extra: "{{ _rpx_site.extra | default([]) }}"
       extra_block: "{{ _rpx_site.extra_block | default('') }}"
       issue_cert: "{{ _rpx_site.issue_cert | default(true) }}"
+      basic_auth: "{{ _rpx_site.basic_auth | default(false) }}"
 
 - name: Define _task_prefix.
   set_fact:
@@ -42,7 +43,7 @@
 - name: "{{ _task_prefix }} Template site.conf."
   template:
     src: site.conf.j2
-    dest: "{{ (nginx_sites_dir, domain ~ '.conf') | path_join }}"
+    dest: "{{ (nginx_sites_dir, _site.domain ~ '.conf') | path_join }}"
     owner: root
     group: root
     mode: 0644
@@ -54,7 +55,25 @@
 
 - name: "{{ _task_prefix }} Ensure disabled site conf is absent."
   file:
-    path: "{{ (nginx_sites_dir, domain ~ '.disabled') | path_join }}"
+    path: "{{ (nginx_sites_dir, _site.domain ~ '.disabled') | path_join }}"
     state: absent
+
+- name: "{{ _task_prefix }} Template htpasswd."
+  template:
+    src: basic_auth.htpasswd.j2
+    dest: "{{ (nginx_basic_auth_dir, _site.domain ~ '.htpasswd') | path_join }}"
+    owner: root
+    group: root
+    mode: 0644
   vars:
-    domain: "{{ _site.domain }}"
+    basic_auth: "{{ _site.basic_auth }}"
+  when:
+    - not _site.basic_auth is boolean
+    - _site.basic_auth is iterable
+    - _site.basic_auth | length > 0
+
+- name: "{{ _task_prefix }} Ensure htpasswd is absent."
+  file:
+    path: "{{ (nginx_basic_auth_dir, _site.domain ~ '.htpasswd') | path_join }}"
+    state: absent
+  when: (not _site.basic_auth is iterable) or (_site.basic_auth | length == 0)

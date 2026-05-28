@@ -11,6 +11,7 @@
     - "{{ nginx_ssl_dir }}"
     - "{{ nginx_snippets_dir }}"
     - "{{ nginx_sites_dir }}"
+    - "{{ nginx_basic_auth_dir }}"
 
 - name: Link snakeoil cert in ssl directory.
   file:
