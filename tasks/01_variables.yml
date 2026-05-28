@@ -17,6 +17,11 @@
     nginx_repo: "{{ _nginx_repo_mainline }}"
   when: nginx_repo is not defined
 
+- name: Define nginx_repo_gpgkey_url.
+  set_fact:
+    nginx_repo_gpgkey_url: "{{ _nginx_gpgkey_url }}"
+  when: nginx_repo_gpgkey_url is not defined
+
 - name: Define nginx_logdir.
   set_fact:
     nginx_logdir: "{{ _nginx_logdir }}"

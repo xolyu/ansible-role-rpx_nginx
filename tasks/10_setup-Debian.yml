@@ -1,14 +1,54 @@
 ---
 
-- name: Download nginx GnuPG key.
-  get_url:
-    url: "{{ _nginx_gpgkey_url }}"
-    dest: "{{ _nginx_gpgkey_path }}"
+- name: Ensure required packages are installed.
+  apt:
+    name: "{{ pkg_names | flatten }}"
+  vars:
+    pkg_names:
+      - "{{ 'python3-debian' if _nginx_repo_format_deb822 | bool else [] }}"
+      - ssl-cert
 
-- name: Add nginx repository.
-  apt_repository:
-    repo: "deb [signed-by={{ _nginx_gpgkey_path }}] {{ nginx_repo }} {{ ansible_facts.distribution_release }} nginx"
-    filename: nginx
+- name: Repository as list file for legacy systems.
+  when: not _nginx_repo_format_deb822 | bool
+  block:
+    - name: Download nginx GnuPG key.
+      get_url:
+        url: "{{ _nginx_gpgkey_url }}"
+        dest: "{{ _nginx_gpgkey_path }}"
+        mode: '0644'
+
+    - name: Add nginx repository.
+      apt_repository:
+        repo: "deb [signed-by={{ _nginx_gpgkey_path }}] {{ nginx_repo }} {{ ansible_facts.distribution_release }} nginx"
+        filename: nginx
+
+- name: Repository as soruces file in deb822 format.
+  when: _nginx_repo_format_deb822 | bool
+  block:
+    - name: Ensure files from old list format are absent.
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/apt/sources.list.d/nginx.list
+        - "{{ _nginx_gpgkey_path }}"
+
+    - name: Ensure nginx repository.
+      deb822_repository:  # available since Ansible 2.15
+        name: nginx
+        uris: "{{ nginx_repo }}"
+        suites: "{{ ansible_facts.distribution_release }}"
+        components: nginx
+        signed_by: "{{ nginx_repo_gpgkey_url }}"
+      register: _result_nginx_repo
+
+    - name: Update apt cache if needed.
+      apt:
+        update_cache: true
+        cache_valid_time: "{{ 0 if update_required else apt_update_cache_valid_time | default(3600) }}"
+      vars:
+        update_required: "{{ _result_nginx_repo is changed }}"
+
 
 - name: Pin nginx.org packages over distribution-provided ones.
   copy:
@@ -18,6 +58,7 @@
       Pin: release o=nginx
       Pin-Priority: 900
     dest: /etc/apt/preferences.d/99nginx
+    mode: '0644'
 
 - name: Install nginx.
   apt:

@@ -10,7 +10,10 @@ Certificates are automatically retrieved using the `xolyu.acmesh` role and inclu
 
 ## Requirements
 
-None.
+* System package `python3-debian` &ndash; for Ansible's [`deb822_repository` module](https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/deb822_repository_module.html).
+* System package `ssl-cert` &ndash; to generate Snakeoil cert as fallback certificate.
+
+*Packages are installed automatically.*
 
 
 ## Dependencies

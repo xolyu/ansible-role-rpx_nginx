@@ -4,5 +4,13 @@ _nginx_gpgkey_url: https://nginx.org/keys/nginx_signing.key
 _nginx_gpgkey_path: /etc/apt/trusted.gpg.d/nginx.asc
 _nginx_repo_mainline: http://nginx.org/packages/mainline/debian
 
+_nginx_repo_format_deb822: >
+  {{ (
+    ansible_facts.distribution == 'Debian' and ansible_facts.distribution_major_version is version('12', '>=')
+  ) or (
+    ansible_facts.distribution == 'Ubuntu' and ansible_facts.distribution_version is version('24.04', '>=')
+  )
+  }}
+
 _nginx_logdir: /var/log/nginx
 _nginx_dir: /etc/nginx
