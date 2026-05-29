@@ -11,10 +11,14 @@
     cmd: nginx -v
   register: _result_nginx_version
   changed_when: false
+  ignore_errors: "{{ ansible_check_mode }}"
+  check_mode: false  # run normally even in check mode
 
 - name: Define _nginx_version.
   set_fact:
-    _nginx_version: "{{ _result_nginx_version.stderr | regex_search('[0-9\\.]+') }}"
+    _nginx_version: "{{ _result_nginx_version.stderr | regex_search('[0-9\\.]+') | default('1.30', true) }}"
+    # `1.30` => a relatively recent default, to ensure functionality even in check mode.
+    # Case distinctions based on the version should use/simulate a new configuration instead of an older one.
 
 - block:
     - include_tasks: 20_configure.yml
