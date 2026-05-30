@@ -270,6 +270,12 @@ Dict configuration of a single site
   Type: Boolean  
   Default: `yes`
 
+* **`redirect_to_main_domain`**  
+  Defines whether additional domains should be redirected to the main domain.  
+  Useful if the domain is _example\.com_ and the additional domain is _www\.example\.com_, so the _www_ subdomain will be redirected to the main domain _example\.com_.  
+  Type: Boolean  
+  Default: `no`
+
 * **`basic_auth`**  
   User(s) for basic_auth.  
   Type: String/Block, List, Dict  

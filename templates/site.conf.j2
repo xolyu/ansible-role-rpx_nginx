@@ -4,7 +4,7 @@ server {
 	listen          80;
 	listen          [::]:80;
 
-	server_name     {{ server_name }};
+	server_name     {{ all_server_name }};
 
 	# general settings
 	client_max_body_size            16m;
@@ -21,6 +21,7 @@ server {
 	include {{ (nginx_snippets_dir, 'error-pages.conf') | path_join }};
 }
 
+{% for server_instance in server_instances %}
 server {
 {% if _nginx_version is version('1.25.1', '<') %}
 	listen          443 ssl http2;
@@ -31,7 +32,7 @@ server {
 	http2           on;
 {% endif %}
 
-	server_name     {{ server_name }};
+	server_name     {{ server_instance.server_name }};
 
 	# ssl cert RSA
 	ssl_certificate           {{ (rpx_cert_dir, domain, 'fullchain.cer') | path_join }};
@@ -42,13 +43,13 @@ server {
 	ssl_certificate_key       {{ (rpx_cert_dir, domain ~ '_ecc', domain ~ '.key') | path_join }};
 
 	include {{ (nginx_snippets_dir, 'ssl.conf') | path_join }};
-
 {% if _site.enable_hsts %}
+
 	# HSTS (ngx_http_headers_module is required) (63072000 seconds = 2 years)
 	add_header Strict-Transport-Security "{{ _site.hsts_header }}" always;
 {% endif %}
-
 {% if _site.enable_ocsp_stapling %}
+
 	# OCSP stapling
 	ssl_stapling on;
 	ssl_stapling_verify on;
@@ -62,6 +63,11 @@ server {
 	resolver {{ _site.ocsp_stapling_resolver }};
 {% endif %}
 
+	# log files
+	access_log      {{ (nginx_logdir, domain, 'access.log') | path_join }};
+	error_log       {{ (nginx_logdir, domain, 'error.log') | path_join }};
+
+{% if server_instance.type == 'main' %}
 	# general settings
 	client_max_body_size            {{ _site.extra.client_max_body_size | default(rpx_default_client_max_body_size, true) }};
 	proxy_buffering                 {{ _site.extra.proxy_buffering | default(rpx_default_proxy_buffering) | ternary('on', 'off') }};
@@ -86,20 +92,16 @@ server {
 	{{ _site.extra_block | indent("\t") }}
 {% endif +%}
 
-	# log files
-	access_log      {{ (nginx_logdir, domain, 'access.log') | path_join }};
-	error_log       {{ (nginx_logdir, domain, 'error.log') | path_join }};
-
-	# Load configuration files for the default server block.
-	#include /etc/nginx/default.d/*.conf;
-
+{# 	# Load configuration files for the default server block.
+	#include /etc/nginx/default.d/*.conf; #}
 {% if _site.basic_auth is iterable and _site.basic_auth | length > 0 %}
+
 	# basic auth
 	auth_basic              "Auth required";
 	auth_basic_user_file    {{ (nginx_basic_auth_dir, domain ~ '.htpasswd') | path_join }};
 {% endif %}
-
 {% if _site.proxy_pass is defined %}
+
 	location / {
 		proxy_pass      {{ _site.proxy_pass }};
 		include         /etc/nginx/proxy_params;
@@ -111,4 +113,15 @@ server {
 
 	include {{ (nginx_snippets_dir, 'security-apache-ht.conf') | path_join }};
 	include {{ (nginx_snippets_dir, 'error-pages.conf') | path_join }};
+{# end of server_instance.type == 'main' #}
+{% else %}{# e.g. server_instance.type == 'redirect_to_main' #}
+	# general settings
+	client_max_body_size            16m;
+
+	return 301 https://{{ domain }}$request_uri;
+
+{# end of server_instance.type == 'redirect_to_main' #}
+{% endif %}
 }
+{# end of for server_instance #}
+{% endfor %}

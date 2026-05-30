@@ -4,7 +4,7 @@
   set_fact:
     _site:
       domain: "{{ _rpx_site.domain }}"
-      additional_domains: "{{ _rpx_site.additional_domains | default([]) }}"
+      additional_domains: "{{ _rpx_site.additional_domains | default([]) | reject('eq', _rpx_site.domain) }}"
       all_domains: "{{ ([_rpx_site.domain] + (_rpx_site.additional_domains | default([]))) | unique }}"
       state: "{{ (_rpx_site.state | default('present') == 'absent') | ternary('absent', 'present') }}"
       proxy_pass: "{{ _rpx_site.proxy_pass | default(omit) }}"
@@ -16,6 +16,7 @@
       extra: "{{ _rpx_site.extra | default([]) }}"
       extra_block: "{{ _rpx_site.extra_block | default('') }}"
       issue_cert: "{{ _rpx_site.issue_cert | default(true) }}"
+      redirect_to_main_domain: "{{ _rpx_site.redirect_to_main_domain | default(false) }}"
       basic_auth: "{{ _rpx_site.basic_auth | default(false) }}"
 
 - name: Define _task_prefix.
@@ -49,8 +50,18 @@
     mode: 0644
     # validate: nginx -t -c %s
   vars:
-    server_name: "{{ _site.all_domains | join(' ') }}"
     domain: "{{ _site.domain }}"
+    all_server_name: "{{ _site.all_domains | join(' ') }}"
+    instance_variant_all_accessible:
+      - type: main
+        server_name: "{{ _site.all_domains | join(' ') }}"
+    instance_variant_redirect_to_main:
+      - type: main
+        server_name: "{{ _site.domain }}"
+      - type: redirect_to_main
+        server_name: "{{ _site.additional_domains | join(' ') }}"
+    server_instances: >-
+      {{ instance_variant_redirect_to_main if _site.redirect_to_main_domain else instance_variant_all_accessible }}
   notify: "{{ rpx_change_notify }}"
 
 - name: "{{ _task_prefix }} Ensure disabled site conf is absent."
